@@ -9,6 +9,7 @@ public:
 	Camera();
 	~Camera();
 	void VisionMove();
+	void VisionVector(float playerX, float playerY, float playerR);
 	void Draw();
 private:
 	float cameraX;	//カメラ本体の座標
@@ -21,7 +22,8 @@ private:
 	float visionMemoryX[2];	//視界移動の記憶変数
 	float visionMemoryY[2];
 
-	int visionFlag = 0;
+	int visionFlag;
+	int visionHitFlag[3];
 
 	float visionTimer;
 };

@@ -7,7 +7,7 @@ public:
 	~Player();
 	void PlayerControl(char* key, char* oldkey);
 	void Draw();
-private:
+public:
 	float playerX;		//プレイヤーの座標
 	float playerY;
 	float playerR;
