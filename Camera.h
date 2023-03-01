@@ -8,8 +8,8 @@ class Camera
 public:
 	Camera();
 	~Camera();
-	void VisionMove();
-	void VisionVector(float playerX, float playerY, float playerR);
+	void VisionMove(); //視界を動かす関数
+	void VisionVector(float playerX, float playerY, float playerR); //それぞれのベクトルを得る関数
 	void Draw();
 private:
 	float cameraX;	//カメラ本体の座標
@@ -22,8 +22,10 @@ private:
 	float visionMemoryX[2];	//視界移動の記憶変数
 	float visionMemoryY[2];
 
-	int visionFlag;
-	int visionHitFlag[3];
+	int visionFlag; //視界の移動を制御するフラグ
+	int visionHitFlag[3]; //視界の当たり判定用フラグ
 
-	float visionTimer;
+	int speed;
+
+	float visionTimer; //視界が再び動くまでのタイマー
 };

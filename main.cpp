@@ -62,8 +62,8 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 		// XVˆ—
 		player->PlayerControl(keys, oldkeys);
-		camera->VisionMove();
 		camera->VisionVector(player->playerX, player->playerY, player->playerR);
+		camera->VisionMove();
 		// •`‰æˆ—
 		camera->Draw();
 		player->Draw();

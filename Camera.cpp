@@ -14,16 +14,18 @@ Camera::Camera()
 	cameraVisionX[1] = -50;
 	cameraVisionY[1] = 160;
 
+	speed = 1;
 	//視界移動の記録用
 	for (int i = 0; i < 2; i++)
 	{
 		visionMemoryX[i] = 0;
 		visionMemoryY[i] = 0;
 	}
-
+	//視界の移動を制御するフラグ
 	visionFlag = 0;
-	visionHitFlag[3] = {};
-	//視界が動くまでのタイマー
+	//視界の当たり判定用フラグ
+	visionHitFlag[2] = {};
+	//視界が再び動くまでのタイマー
 	visionTimer = 15.0f;
 }
 
@@ -33,6 +35,7 @@ Camera::~Camera()
 
 void Camera::VisionMove()
 {
+
 #pragma region 回転処理
 	if (visionFlag == 0)
 	{
@@ -52,12 +55,7 @@ void Camera::VisionMove()
 			visionMemoryY[i] = cameraVisionX[i] * -sin(PI / 180 * 1) + cameraVisionY[i] * cos(PI / 180 * 1);
 		}
 	}
-	//移動させる
-	for (int i = 0; i < 2; i++)
-	{
-		cameraVisionX[i] = visionMemoryX[i];
-		cameraVisionY[i] = visionMemoryY[i];
-	}
+	
 #pragma endregion
 	//角度決め
 	if (visionFlag == 0 && cameraVisionX[0] <= 113.6 && cameraVisionY[0] <= 112.6)
@@ -89,15 +87,35 @@ void Camera::VisionMove()
 			visionTimer = 15.0f;
 		}
 	}
+	if (visionFlag == 5)
+	{
+		visionTimer--;
+		if (visionTimer < 0)
+		{
+			cameraVisionX[0] = 50;
+			cameraVisionY[0] = 160;
+
+			cameraVisionX[1] = -50;
+			cameraVisionY[1] = 160;
+			visionFlag = rand() % 2;
+			visionTimer = 15.0f;
+		}
+	}
 #pragma endregion
 	//----------------------------------
+	//移動させる
+	for (int i = 0; i < 2; i++)
+	{
+		cameraVisionX[i] = visionMemoryX[i];
+		cameraVisionY[i] = visionMemoryY[i];
+	}
 }
 
 void Camera::VisionVector(float playerX, float playerY, float playerR)
 {
 	//それぞれのベクトル
 	VECTOR vec[3];	//線
-	VECTOR vecPlayer[3];	//Playerまでのベクトル
+	VECTOR vecPlayer[4];	//Playerまでのベクトル
 #pragma region 視界のベクトル
 	//左右ラインベクトル
 	for (int i = 0; i < 2; i++)
@@ -124,11 +142,16 @@ void Camera::VisionVector(float playerX, float playerY, float playerR)
 	vecPlayer[1].y = playerY - cameraY;
 	vecPlayer[1].z = 0;
 	vecPlayer[1] = VNorm(vecPlayer[1]);
-	//限界点からPlayerのベクトル
+	//限界点[0]からPlayerのベクトル
 	vecPlayer[2].x = playerX - (cameraVisionX[0] + cameraX);
 	vecPlayer[2].y = (playerY - playerR) - (cameraVisionY[0] + cameraY);
 	vecPlayer[2].z = 0;
 	vecPlayer[2] = VNorm(vecPlayer[2]);
+	//限界点[1]からPlayerのベクトル
+	vecPlayer[3].x = playerX - (cameraVisionX[1] + cameraX);
+	vecPlayer[3].y = (playerY - playerR) - (cameraVisionY[1] + cameraY);
+	vecPlayer[3].z = 0;
+	vecPlayer[3] = VNorm(vecPlayer[3]);
 #pragma endregion
 	//当たり判定
 	//右ラインベクトルの判定
@@ -149,6 +172,7 @@ void Camera::VisionVector(float playerX, float playerY, float playerR)
 	{
 		visionHitFlag[1] = 0;
 	}
+	//視界限界点の判定
 	if (vec[2].x * vecPlayer[2].y - vec[2].y * vecPlayer[2].x > 0)
 	{
 		visionHitFlag[2] = 1;
@@ -157,7 +181,36 @@ void Camera::VisionVector(float playerX, float playerY, float playerR)
 	{
 		visionHitFlag[2] = 0;
 	}
-	DrawFormatString(0, 0, GetColor(255, 255, 255), "cameraFlag 1 = [%d]\ncameraFlag 2 = [%d]\ncameraFlag 3 = [%d]", visionHitFlag[0], visionHitFlag[1], visionHitFlag[2]);
+#pragma region 視界に入った時の処理
+	if (visionHitFlag[0] == 1 && visionHitFlag[1] == 1 && visionHitFlag[2] == 1)
+	{
+		visionFlag = 5;
+		if (visionFlag == 5 && vecPlayer[2].x != vecPlayer[3].x)
+		{
+			if (vecPlayer[3].x-0.001 >= -vecPlayer[2].x)
+			{
+				//座標を回転させる
+				for (int i = 0; i < 2; i++)
+				{
+					visionMemoryX[i] = cameraVisionX[i] * cos(PI / 180 * 1) - cameraVisionY[i] * -sin(PI / 180 * 1);
+					visionMemoryY[i] = cameraVisionX[i] * -sin(PI / 180 * 1) + cameraVisionY[i] * cos(PI / 180 * 1);
+				}
+			}
+			else if (-vecPlayer[2].x-0.001 >= vecPlayer[3].x)
+			{
+				//座標を回転させる
+				for (int i = 0; i < 2; i++)
+				{
+					visionMemoryX[i] = cameraVisionX[i] * cos(PI / 180 * 1) - cameraVisionY[i] * sin(PI / 180 * 1);
+					visionMemoryY[i] = cameraVisionX[i] * sin(PI / 180 * 1) + cameraVisionY[i] * cos(PI / 180 * 1);
+				}
+			}
+		}
+
+	}
+#pragma endregion
+	
+	DrawFormatString(0,40, GetColor(255, 255, 255), "視界からPlayerまでの距離[%f][%f]",-vecPlayer[2].x,vecPlayer[3].x );
 }
 
 void Camera::Draw()
